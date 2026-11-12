@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+dist/
+artifacts/
+.vs/
+*.user
+
+# Local audit inputs, backups and runtime data are not part of the public project.
+/AUDYT_2026-11-07.md
+/PROMPT_Widzet_Baterii_Windows_11.md
+.env
+.env.*
+*.log
+settings.json*
+history.json*
+battery-health.xml
