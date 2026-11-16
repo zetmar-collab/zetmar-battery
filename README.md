@@ -1,4 +1,4 @@
-﻿# ZETMAR Battery 1.3.1
+﻿# ZETMAR Battery 1.3.2
 
 Natywna aplikacja C# / WPF dla Windows 11 x64, .NET 10 LTS. Działa lokalnie, bez konta, serwera i telemetrii. Samodzielny EXE zawiera runtime .NET 10.0.14; nie wymaga instalowania .NET ani uprawnień administratora. Wersja ARM64 może być zbudowana, lecz nie została sprawdzona na urządzeniu ARM.
 
@@ -42,7 +42,9 @@ Alarm niskiego poziomu i alarm osiągnięcia wybranego poziomu ładowania są os
 
 Opcjonalne skróty: wybrany zestaw Ctrl+Alt / Ctrl+Shift / Alt+Shift wraz z B otwiera panel, z W przełącza widżet. Jeśli kombinacja jest zajęta, panel pokazuje informację; aplikacja nie przejmuje cudzej rejestracji. Skróty są domyślnie wyłączone i zwalniane przy zamknięciu.
 
-Autostart jest domyślnie wyłączony. Jawne zaznaczenie przełącznika zapisuje bieżącą ścieżkę EXE w `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\ZetmarBattery`. Odznaczenie usuwa wpis. Po przeniesieniu EXE użyj „Napraw autostart” w Ustawieniach. Panel wykrywa brak pliku, inną lokalizację i nieprawidłową komendę, zamiast uznawać sam wpis rejestru za działający autostart. Przycisk naprawy zapisuje ścieżkę aktualnie uruchomionego EXE z argumentem `--startup`. W tym trybie program pokazuje widżet bez panelu, a druga instancja startowa kończy się bez otwierania okna. Autostart jest uruchomieniem po zalogowaniu użytkownika, a nie usługą przed logowaniem. Windows może opóźniać uruchomienie; jego osobny przełącznik można otworzyć przyciskiem „Autostart w ustawieniach Windows…”. Import i reset ustawień aplikacji nie zmieniają wpisu autostartu Windows.
+Autostart jest domyślnie wyłączony. Włączenie opcji tworzy rzeczywisty skrót `ZETMAR Battery.lnk` w folderze bieżącego użytkownika `shell:startup` (`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`). Skrót wskazuje bieżący EXE, ma argument `--startup`, katalog roboczy programu i jego ikonę. Wyłączenie usuwa skrót. Przycisk „Napraw autostart” tworzy go ponownie po przeniesieniu programu. Dopiero po poprawnym zapisaniu skrótu aplikacja usuwa swój stary wpis `ZetmarBattery` w HKCU Run, unikając podwójnego uruchamiania. Inne skróty pozostają bez zmian. „Otwórz folder autostartu” pozwala zobaczyć zapisany skrót.
+
+Tryb `--startup` pokazuje widżet bez panelu; druga instancja startowa kończy się bez otwierania okna. Uruchomienie następuje po zalogowaniu użytkownika. Windows może je opóźnić lub wyłączyć w swoich ustawieniach, dostępnych przez przycisk w aplikacji. Import i reset ustawień nie zmieniają autostartu. Skrót w folderze Startup jest metodą opisaną w [instrukcji Microsoft](https://support.microsoft.com/en-us/windows/experience/startup-boot/configure-startup-applications-in-windows).
 
 ## Ustawienia i kopie
 

@@ -1,11 +1,67 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 namespace Zetmar.Battery;
 public enum StartupKind { Off, Ready, MissingTarget, OtherLocation, Invalid, Unavailable }
 public sealed record StartupState(StartupKind Kind,string? Target=null,string? Error=null);
 public static class StartupRegistration
 {
+    public const string ShortcutName="ZETMAR Battery.lnk";
+    private static void WithShortcut(string path,Action<dynamic> action)
+    {
+        object? shell=null,link=null;
+        try
+        {
+            shell=Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")??throw new IOException("Windows shortcut service unavailable"));
+            link=((dynamic)shell!).CreateShortcut(path);
+            action(link!);
+        }
+        catch(COMException e){throw new IOException("Cannot access the startup shortcut.",e);}
+        finally
+        {
+            if(link!=null&&Marshal.IsComObject(link))Marshal.FinalReleaseComObject(link);
+            if(shell!=null&&Marshal.IsComObject(shell))Marshal.FinalReleaseComObject(shell);
+        }
+    }
+    public static void WriteShortcut(string folder,string executable)
+    {
+        CreateCommand(executable);
+        if(!File.Exists(executable))throw new IOException("Application executable is missing");
+        Directory.CreateDirectory(folder);
+        string temp=Path.Combine(folder,"ZETMAR-Battery-"+Guid.NewGuid().ToString("N")+".tmp.lnk");
+        try
+        {
+            WithShortcut(temp,link=>
+            {
+                link.TargetPath=Path.GetFullPath(executable);
+                link.Arguments="--startup";
+                link.WorkingDirectory=Path.GetDirectoryName(Path.GetFullPath(executable));
+                link.IconLocation=executable+",0";
+                link.Description="ZETMAR Battery";
+                link.Save();
+            });
+            if(InspectShortcut(temp,executable).Kind!=StartupKind.Ready)throw new IOException("Startup shortcut verification failed");
+            File.Move(temp,Path.Combine(folder,ShortcutName),true);
+        }
+        finally {if(File.Exists(temp))File.Delete(temp);}
+    }
+    public static StartupState InspectShortcut(string path,string executable)
+    {
+        if(!File.Exists(path))return new(StartupKind.Off);
+        try
+        {
+            StartupState result=new(StartupKind.Invalid);
+            WithShortcut(path,link=>
+            {
+                string target=link.TargetPath,arguments=link.Arguments;
+                result=arguments.Trim()=="--startup"?Inspect("\""+target+"\" --startup",executable):new(StartupKind.Invalid,target);
+            });
+            return result;
+        }
+        catch(Exception e) when(e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {return new(StartupKind.Unavailable,Error:e.Message);}
+    }
     public static string CreateCommand(string executable)
     {
         if(!Path.IsPathFullyQualified(executable)||executable.IndexOfAny(new[]{'"','\r','\n'})>=0)

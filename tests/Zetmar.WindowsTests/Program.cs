@@ -100,7 +100,17 @@ internal static class Program
         Check("Startup rejects malformed commands",StartupRegistration.Inspect("cmd /c something",expected,_=>true).Kind==StartupKind.Invalid);
         Check("Startup repair button is present",Find<Button>(panel).Any(c=>(string)c.Content=="Repair startup"));
         Settings.Autostart=true;Check("Startup can enable in isolated profile",Settings.Autostart);
+        Check("Startup creates a real isolated shortcut",File.Exists(Settings.StartupShortcut)&&Settings.StartupShortcut.StartsWith(folder,StringComparison.OrdinalIgnoreCase));
+        Check("Shortcut detects another executable location",StartupRegistration.InspectShortcut(Settings.StartupShortcut,expected).Kind==StartupKind.OtherLocation);
+        string startupCopy=Path.Combine(folder,"Temporary battery.exe");File.Copy(Environment.ProcessPath!,startupCopy);
+        StartupRegistration.WriteShortcut(Settings.StartupFolder,startupCopy);File.Delete(startupCopy);
+        Check("Shortcut detects deleted target",Settings.StartupStatus.Kind==StartupKind.MissingTarget);
+        Settings.Autostart=true;Check("Repair replaces broken shortcut",Settings.Autostart);
+        bool missingRejected=false;try{StartupRegistration.WriteShortcut(Settings.StartupFolder,startupCopy);}catch(IOException){missingRejected=true;}
+        Check("Failed replacement preserves valid shortcut",missingRejected&&Settings.Autostart);
+        string unrelated=Path.Combine(Settings.StartupFolder,"Other application.lnk");File.WriteAllText(unrelated,"unrelated");
         Settings.Autostart=false;Check("Startup can disable in isolated profile",!Settings.Autostart);
+        Check("Disable removes only owned shortcut",!File.Exists(Settings.StartupShortcut)&&File.Exists(unrelated));
         panel.Close();app.Shutdown();Console.WriteLine($"{passed} Windows tests passed. Isolated data: {folder}");
     }
 }

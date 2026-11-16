@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -59,7 +59,12 @@ public sealed class DetailsWindow : Window
         check.Tag="control-"+controlIndex++;focusControls[(string)check.Tag]=check;
         AutomationProperties.SetName(check, label);
         checks.Add((check, read));
-        check.Click += (_, _) => { changed(check.IsChecked == true); app.Changed(reset); check.IsChecked = read(); };
+        void Apply(object sender,RoutedEventArgs e)
+        {
+            if((check.IsChecked==true)==read())return;
+            changed(check.IsChecked==true);app.Changed(reset);check.IsChecked=read();
+        }
+        check.Checked+=Apply;check.Unchecked+=Apply;
         body.Children.Add(check);
     }
     private void Select(string label, string[] labels, int index, Action<int> changed)
@@ -306,6 +311,7 @@ public sealed class DetailsWindow : Window
             startupStatus=Text("",13);body.Children.Add(startupStatus);
             Button(app.T("Napraw autostart"),()=>{Settings.Autostart=true;app.Changed();UpdateValues();});
             Button(app.T("Autostart w ustawieniach Windows…"),()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:startupapps"){UseShellExecute=true}));
+            Button(app.T("Otwórz folder autostartu"),()=>System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Settings.StartupFolder){UseShellExecute=true}));
             body.Children.Add(Text(app.T("Program uruchomi się po zalogowaniu. Windows może opóźnić start lub wyłączyć go w swoich ustawieniach."),13));
         });
         Section(app.T("Skróty klawiaturowe"),()=>
@@ -347,7 +353,7 @@ public sealed class DetailsWindow : Window
         var brandBattery=new BatteryGauge { Width=24,Height=14 };brandBattery.Update(new(Zetmar.Core.PowerState.Battery,75),app.Accent);
         header.Children.Add(new Border { Child=brandBattery,CornerRadius=new CornerRadius(10),Padding=new Thickness(10),Background=UiTheme.Brush(this,"AccentSoftBrush") });
         var brand=Text("ZETMAR Battery",18);brand.FontWeight=FontWeights.SemiBold;brand.VerticalAlignment=VerticalAlignment.Center;brand.Margin=new Thickness(12,0,0,0);Grid.SetColumn(brand,1);header.Children.Add(brand);
-        var version=Text("v1.3.1 · Windows 11",12);version.VerticalAlignment=VerticalAlignment.Center;version.Margin=new Thickness(12,0,0,0);Grid.SetColumn(version,2);header.Children.Add(version);
+        var version=Text("v1.3.2 · Windows 11",12);version.VerticalAlignment=VerticalAlignment.Center;version.Margin=new Thickness(12,0,0,0);Grid.SetColumn(version,2);header.Children.Add(version);
         var headerBorder=new Border { Child=header,Background=UiTheme.Brush(this,"CardBrush"),BorderBrush=UiTheme.Brush(this,"CardBorderBrush"),BorderThickness=new Thickness(0,0,0,1) };root.Children.Add(headerBorder);
         var errorRow=new DockPanel();saveStatus=Text("",13);retrySaveButton=new Button { Content=app.T("Ponów zapis ustawień"),Margin=new Thickness(12,0,0,0) };retrySaveButton.Click+=(_,_)=>app.Changed();DockPanel.SetDock(retrySaveButton,Dock.Right);errorRow.Children.Add(retrySaveButton);errorRow.Children.Add(saveStatus);
         errorBanner=new Border { Child=errorRow,Padding=new Thickness(16),Margin=new Thickness(20,12,20,0),Background=UiTheme.Brush(this,"AccentSoftBrush"),CornerRadius=new CornerRadius(10) };Grid.SetRow(errorBanner,1);root.Children.Add(errorBanner);

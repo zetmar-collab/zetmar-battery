@@ -1,4 +1,15 @@
-﻿# Autostart 1.3.1 — 12 listopada 2026
+﻿# Autostart 1.3.2 — 16 listopada 2026
+
+- Autostart zapisuje rzeczywisty skrót .lnk w folderze shell:startup, z bieżącym EXE, argumentem --startup, katalogiem roboczym i ikoną.
+- 58 testów logiki i 59 testów Windows. Nowe testy obejmują plik skrótu, wykrywanie innego/usuniętego EXE, naprawę, zachowanie poprawnego skrótu po błędzie podmiany oraz usuwanie wyłącznie własnego skrótu.
+- Test GUI potwierdza tworzenie/usuwanie skrótu przełącznikiem i naprawę przyciskiem; odczytuje TargetPath, Arguments i WorkingDirectory przez Windows Script Host. Sprawdza także start bez panelu i ciche zakończenie duplikatu.
+- Poprawiono obsługę Checked/Unchecked, aby zmiana przez UI Automation również uruchamiała zapis; synchronizacja zewnętrznego stanu nie wywołuje ponownie zmiany ustawień.
+- Końcowy EXE portable 1.3.2 przeszedł wszystkie sześć testów GUI. Na używanej kopii aplikacji przycisk naprawy utworzył skrót w rzeczywistym folderze Startup i usunął poprzedni wpis Run. Uruchomienie tego skrótu po zamknięciu aplikacji pokazało widżet bez panelu; log potwierdził tryb startup. Suma SHA-256 ustawień użytkownika pozostała niezmieniona. Poprzedni EXE i wpis zachowano w lokalnej kopii.
+- Nie wykonywano wylogowania ani restartu Windows. Uruchomienie skrótu w bieżącej sesji nie dowodzi startu po rzeczywistym zalogowaniu; Windows może opóźniać lub wyłączać autostart.
+
+---
+
+# Autostart 1.3.1 — 12 listopada 2026
 
 Przyczyna wykryta na komputerze: wpis HKCU Run wskazywał nieistniejący EXE w starej lokalizacji, podczas gdy aplikacja działała z katalogu ZETMAR-Battery-win-x64-portable. Stary getter sprawdzał tylko istnienie wartości rejestru.
 

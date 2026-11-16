@@ -1,5 +1,11 @@
 ﻿# Historia zmian
 
+## 1.3.2 — 2026-11-16
+- Włączenie autostartu tworzy skrót w shell:startup; wyłączenie go usuwa.
+- Naprawa skrótu ustawia bieżący EXE, --startup, katalog roboczy i ikonę; usuwa stary wpis Run dopiero po zapisaniu skrótu.
+- Przycisk otwierania folderu autostartu; rzeczywiste skróty w izolowanych testach.
+- 58 testów logiki i 59 testów Windows.
+
 ## 1.3.1 — 2026-11-12
 - Naprawa autostartu po przeniesieniu EXE: walidacja zapisanej ścieżki i przycisk naprawy.
 - Tryb --startup bez otwierania panelu i bez ponownego pokazywania go przez duplikaty.

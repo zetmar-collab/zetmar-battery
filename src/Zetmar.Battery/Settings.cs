@@ -102,16 +102,18 @@ public sealed class Settings
     {
         try { Directory.CreateDirectory(Folder); var p = Path.Combine(Folder, "app.log"); if (File.Exists(p) && new FileInfo(p).Length > 262144) File.Move(p, p + ".old", true); File.AppendAllText(p, $"{DateTimeOffset.Now:O} {message}\n"); } catch { }
     }
-    private static string? isolatedStartupCommand;
+    public static string StartupFolder => DataDirectory!=null ? Path.Combine(Folder,"startup") : Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+    public static string StartupShortcut => Path.Combine(StartupFolder,StartupRegistration.ShortcutName);
     public static StartupState StartupStatus
     {
         get
         {
             try
             {
-                string? command;
-                if(DataDirectory!=null)command=isolatedStartupCommand;
-                else { using var key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");command=key?.GetValue("ZetmarBattery") as string; }
+                var shortcut=StartupRegistration.InspectShortcut(StartupShortcut,Environment.ProcessPath??"");
+                if(shortcut.Kind!=StartupKind.Off||DataDirectory!=null)return shortcut;
+                using var key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
+                string? command=key?.GetValue("ZetmarBattery") as string;
                 return StartupRegistration.Inspect(command,Environment.ProcessPath??"");
             }
             catch(Exception e) when(e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
@@ -123,16 +125,15 @@ public sealed class Settings
         get=>StartupStatus.Kind==StartupKind.Ready;
         set
         {
-            string? command=null;
             if(value)
             {
                 string path=Environment.ProcessPath??throw new IOException("Application path unavailable");
-                if(!File.Exists(path))throw new IOException("Application executable is missing");
-                command=StartupRegistration.CreateCommand(path);
+                StartupRegistration.WriteShortcut(StartupFolder,path);
             }
-            if(DataDirectory!=null){isolatedStartupCommand=command;return;}
-            using var key=Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
-            if(value)key.SetValue("ZetmarBattery",command!,RegistryValueKind.String);else key.DeleteValue("ZetmarBattery",false);
+            else File.Delete(StartupShortcut);
+            if(DataDirectory!=null)return;
+            using var key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run",true);
+            key?.DeleteValue("ZetmarBattery",false);
         }
     }
 }
